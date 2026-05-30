@@ -1,0 +1,24 @@
+[package]
+name = "agora-rs"
+version = "0.1.0"
+edition = "2021"
+description = "Rust acceleration layer for agora-etl — high-throughput record dispatch"
+license = "Apache-2.0"
+repository = "https://github.com/thanhtham010891/agora-etl"
+authors = ["Tham Tra"]
+
+[lib]
+name = "agora_rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.25", features = ["extension-module", "abi3-py311"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+# Note: `cargo test` fails with pyo3 abi3 because the Python dylib is not
+# linked at test time (affects both macOS and Linux). Run tests via pytest
+# after building with `maturin build --release`.

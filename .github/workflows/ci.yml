@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-agora-rs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install maturin
+        run: pip install "maturin>=1.0,<2"
+
+      - name: Install agora-etl
+        run: pip install "git+https://github.com/thanhtham010891/agora-etl.git"
+
+      - name: Build and install extension
+        run: |
+          maturin build --release --interpreter python
+          pip install --find-links target/wheels agora-etl-rs
+
+      - name: Install test dependencies
+        run: pip install pytest "pytest-asyncio>=0.24"
+
+      - name: Run Python tests
+        run: pytest tests/ -v
